@@ -12,7 +12,6 @@ Designed for developers who prefer **local files**, **Git**, and **their own wor
 - 🎥 First-class support for YouTube-based learning
 - ✏️ Open notes immediately in your editor
 - 🔧 Editor is configurable (VS Code by default)
-- 🌱 Optional Git auto-commit
 - 🚫 Safe by default (no overwriting existing notes)
 
 ---
@@ -78,7 +77,6 @@ note <topic> "<title>" [options]
 | `--github <url>`     | Your GitHub repository               |                                                                    |
 | `--source <value>`   | Course/source code URL or local path |                                                                    |
 | `--editor <command>` | Editor command (default: `code`)     |                                                                    |
-| `--git`              | Auto-commit the note to Git          |                                                                    |
 | `-h`, `--help`       | Show help                            |                                                                    |
 
 ## 🧪 Examples
@@ -99,7 +97,6 @@ note laravel "Laravel Livewire v4" \
   --youtube https://youtu.be/eUNWzJUvkCA \
   --channel "Channel Name|https://www.youtube.com/@ChannelName" \
   --source https://github.com/channelname/livewire-course \
-  --git
 ```
 ### Use a different editor
 ```bash
