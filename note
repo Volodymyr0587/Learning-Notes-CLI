@@ -186,16 +186,25 @@ fi
 "$EDITOR" "$NOTE_FILE"
 
 # ------------------------------
-# GIT AUTOCOMMIT (OPT-IN)
+# GIT AUTOCOMMIT + PUSH (OPT-IN)
 # ------------------------------
 if [[ "$USE_GIT" == true ]]; then
-  if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-    git add "$NOTE_FILE"
-    git commit -m "Add note: $TITLE" >/dev/null 2>&1 || true
+  if git -C "$NOTES_ROOT" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    git -C "$NOTES_ROOT" add "$NOTE_FILE"
+
+    if git -C "$NOTES_ROOT" commit -m "Add note: $TITLE" >/dev/null 2>&1; then
+      git -C "$NOTES_ROOT" push >/dev/null 2>&1 || {
+        echo "⚠️  Commit created, but git push failed"
+      }
+    else
+      echo "⚠️  Nothing to commit"
+    fi
   else
-    echo "⚠️  Not a git repository, skipping commit"
+    echo "⚠️  $NOTES_ROOT is not a git repository, skipping git"
   fi
 fi
+
+
 
 echo "✅ Note created:"
 echo "   $NOTE_FILE"
