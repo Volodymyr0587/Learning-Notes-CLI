@@ -10,6 +10,8 @@ Designed for developers who prefer **local files**, **Git**, and **their own wor
 - 📂 Clean, predictable folder structure
 - 🧱 Markdown notes with a consistent template
 - 🎥 First-class support for YouTube-based learning
+- 📋 List topics and notes across different sections
+- 👀 View all notes within a specific topic
 - ✏️ Open notes immediately in your editor
 - 🔧 Editor is configurable (VS Code by default)
 - 🚫 Safe by default (no overwriting existing notes)
@@ -55,9 +57,27 @@ note --help
 ```
 
 ## 🧠 Usage
+### Create a new note
 ```bash
-note <topic> "<title>" [options]
+note  "" [options]
 ```
+### List all topics
+```bash
+note --list [section]
+```
+### Show notes in a topic
+```bash
+note --show [section] 
+```
+
+---
+
+## 📖 Commands
+
+### `note <topic> "<title>" [options]`
+Create a new learning note.
+
+
 ### Arguments
 
 | Argument | Description                                          |
@@ -78,6 +98,38 @@ note <topic> "<title>" [options]
 | `--source <value>`   | Course/source code URL or local path |                                                                    |
 | `--editor <command>` | Editor command (default: `code`)     |                                                                    |
 | `-h`, `--help`       | Show help                            |                                                                    |
+
+
+### `note --list [section]`
+List all topics (folders) in a section.
+
+**Arguments:**
+- `section` - Optional: `in-progress` (default), `completed`, `planned`, or `all`
+
+**Examples:**
+```bash
+note --list                # list topics in in-progress
+note --list completed      # list topics in completed
+note --list all            # list topics in all sections
+note -l planned            # short form
+```
+
+### `note --show [section] <topic>`
+Show all notes within a specific topic.
+
+**Arguments:**
+- `section` - Optional: `in-progress` (default), `completed`, or `planned`
+- `topic` - Topic name to show notes from
+
+**Examples:**
+```bash
+note --show laravel              # show notes in in-progress/laravel
+note --show planned kubernetes   # show notes in planned/kubernetes
+note --show completed docker     # show notes in completed/docker
+note -s python                   # short form
+```
+
+---
 
 ## 🧪 Examples
 
@@ -104,7 +156,7 @@ note bash "Sed & Awk" --editor nano
 ```
 
 ## 📝 Generated Markdown Example
-
+```markdown
 # [Laravel Livewire v4](https://youtu.be/eUNWzJUvkCA)
 
 ## [YouTube - Channel Name](https://www.youtube.com/@ChannelName)
@@ -117,27 +169,51 @@ note bash "Sed & Awk" --editor nano
 
 **SOURCE CODE:** https://github.com/channelname/livewire-course
 
+**NEXT:** https://youtu.be/next-video-id
+```
+
+---
+
 ## 🔒 Safety & Defaults
-- Notes are **never overwritten**
-- Git commits are **opt-in** (`--git`)
-- Editor defaults to **VS Code**
+- Notes are **never overwritten** - script exits if file exists
+- Editor defaults to **VS Code** (`code`)
 - If `--youtube` is provided, the note title becomes a clickable link
+- All notes default to `in-progress` section
+
+---
 
 ## 🧩 Design Philosophy
-- Local-first
-- Plain text (Markdown)
-- Git-friendly
-- No external services
-- Minimal but extensible
+- **Local-first** - Your data stays on your machine
+- **Plain text** - Markdown files you can edit anywhere
+- **Git-friendly** - Perfect for version control
+- **No external services** - No cloud dependencies
+- **Minimal but extensible** - Simple core, easy to customize
 
 This tool is intentionally simple and meant to evolve with your learning workflow.
 
+---
+
+## 💡 Workflow Tips
+
+1. **Create notes as you learn**: Start a new note when beginning a course or tutorial
+2. **List regularly**: Use `note --list` to see what you're working on
+3. **Review with --show**: Use `note --show <topic>` to see all related notes
+4. **Organize by sections**: Move completed topics to `completed/` folder manually
+5. **Plan ahead**: Create placeholder notes in `planned/` for future learning
+6. **Use with Git**: Initialize a git repo in `my-learning-notes/` to track your progress
+
+---
+
 ## 🔮 Possible Future Improvements
-- Move notes between `planned`, `in-progress`, `completed`
-- `note list`, `note open`
+- Move notes between `planned`, `in-progress`, `completed` automatically
+- `note open <topic>` to quickly open a specific note
+- `note search <keyword>` to search across all notes
 - Auto-generate README indexes
-- Templates per resource type (video, book, article)
-- Metadata parsing / search
+- Templates per resource type (video, book, article, course)
+- Metadata parsing and filtering
+- Statistics dashboard (notes per topic, completion tracking)
+
+---
 
 ## 📜 License
 
