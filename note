@@ -7,6 +7,8 @@ set -euo pipefail
 # ------------------------------
 NOTES_ROOT="$HOME/Desktop/my-learning-notes"
 DEFAULT_SECTION="in-progress"
+COMPLETED_SECTION="completed"
+PLANNED_SECTION="planned"
 DEFAULT_EDITOR="code"
 
 # ------------------------------
@@ -16,6 +18,12 @@ usage() {
 cat <<EOF
 Usage:
   note <topic> "<title>" [options]
+  note --list [section]
+  note --show [section] <topic>
+
+Description:
+  Create and manage learning notes in Markdown format.
+  Notes are organized by topics and stored in structured folders.
 
 Arguments:
   topic                 Technology or topic name (e.g. laravel, js, php)
@@ -31,6 +39,11 @@ Options:
   --github <url>        GitHub repository URL
   --source <value>      Source code URL or local path
   --editor <command>    Editor command (default: code)
+  --list, -l [section]  List all existing topics (folders)
+                        section: in-progress (default), completed, planned, all
+  --show, -s [section] <topic>
+                        Show all notes in a specific topic
+                        section: in-progress (default), completed, planned
   -h, --help            Show this help message
 
 Behavior:
@@ -46,12 +59,148 @@ Examples:
 
   note bash "Bash scripting basics" --editor nano
 
+  note --list
+  note --list completed
+  note --list all
+
+  note --show laravel
+  note --show planned laravel
+  note --show completed docker
+
 EOF
+}
+
+# ------------------------------
+# LIST TOPICS
+# ------------------------------
+list_topics() {
+  local section="$1"
+  
+  # Handle "all" section
+  if [[ "$section" == "all" ]]; then
+    list_topics "$DEFAULT_SECTION"
+    echo
+    list_topics "$COMPLETED_SECTION"
+    echo
+    list_topics "$PLANNED_SECTION"
+    return 0
+  fi
+  
+  local section_dir="$NOTES_ROOT/$section"
+  
+  if [[ ! -d "$section_dir" ]]; then
+    echo "📁 Section not found: $section_dir"
+    return 0
+  fi
+  
+  echo "📚 Available topics in $section:"
+  echo
+  
+  local found=false
+  for topic_dir in "$section_dir"/*; do
+    if [[ -d "$topic_dir" ]]; then
+      found=true
+      local topic=$(basename "$topic_dir")
+      local count=$(find "$topic_dir" -name "*.md" -type f 2>/dev/null | wc -l)
+      printf "  • %-20s (%d notes)\n" "$topic" "$count"
+    fi
+  done
+  
+  if [[ "$found" == false ]]; then
+    echo "  No topics found yet."
+  fi
+}
+
+# ------------------------------
+# SHOW NOTES IN TOPIC
+# ------------------------------
+show_notes() {
+  local section="$1"
+  local topic="$2"
+  local topic_dir="$NOTES_ROOT/$section/$topic"
+  
+  if [[ ! -d "$topic_dir" ]]; then
+    echo "❌ Topic '$topic' not found in section '$section'"
+    echo "   Path: $topic_dir"
+    exit 1
+  fi
+  
+  echo "📝 Notes in '$topic' ($section):"
+  echo
+  
+  local notes=()
+  while IFS= read -r -d '' note_file; do
+    notes+=("$note_file")
+  done < <(find "$topic_dir" -name "*.md" -type f -print0 2>/dev/null | sort -z)
+  
+  if [[ ${#notes[@]} -eq 0 ]]; then
+    echo "  No notes found yet."
+    return 0
+  fi
+  
+  for note_file in "${notes[@]}"; do
+    local filename=$(basename "$note_file" .md)
+    local title=$(head -n 1 "$note_file" | sed 's/^# //' | sed 's/^\[//' | sed 's/\](.*)$//')
+    local modified=$(stat -c %y "$note_file" 2>/dev/null | cut -d' ' -f1)
+    
+    if [[ -z "$modified" ]]; then
+      # macOS fallback
+      modified=$(stat -f %Sm -t %Y-%m-%d "$note_file" 2>/dev/null || echo "unknown")
+    fi
+    
+    printf "  • %-40s [%s]\n" "$title" "$modified"
+    printf "    %s\n" "$note_file"
+    echo
+  done
+  
+  echo "Total: ${#notes[@]} note(s)"
 }
 
 # ------------------------------
 # ARGUMENTS
 # ------------------------------
+if [[ $# -eq 0 ]]; then
+  usage
+  exit 1
+fi
+
+# Check for --list first
+if [[ "$1" == "--list" || "$1" == "-l" ]]; then
+  section="${2:-$DEFAULT_SECTION}"
+  list_topics "$section"
+  exit 0
+fi
+
+# Check for --show
+if [[ "$1" == "--show" || "$1" == "-s" ]]; then
+  shift  # Remove --show flag
+  
+  if [[ $# -eq 0 ]]; then
+    echo "❌ --show requires a topic name"
+    usage
+    exit 1
+  fi
+  
+  # Check if first arg is a section name
+  if [[ "$1" == "$DEFAULT_SECTION" || "$1" == "$COMPLETED_SECTION" || "$1" == "$PLANNED_SECTION" ]]; then
+    section="$1"
+    shift
+    if [[ $# -eq 0 ]]; then
+      echo "❌ --show requires a topic name after section"
+      usage
+      exit 1
+    fi
+    topic="$1"
+  else
+    # No section specified, use default
+    section="$DEFAULT_SECTION"
+    topic="$1"
+  fi
+  
+  show_notes "$section" "$topic"
+  exit 0
+fi
+
 [[ $# -lt 2 ]] && usage && exit 1
 
 TOPIC="$1"
