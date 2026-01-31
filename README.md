@@ -129,6 +129,53 @@ note --show completed docker     # show notes in completed/docker
 note -s python                   # short form
 ```
 
+### `note --open [section] <topic> [search]` 
+Open a note in your editor with fuzzy search support.
+```bash
+note --open [section] <topic> [search]
+```
+**Arguments:**
+- `section` - Optional: `in-progress` (default), `completed`, or `planned`
+- `topic` - Topic name containing the note
+- `search` - Optional: partial filename or keywords to match
+
+**Behavior:**
+- If no search term: opens the note if only one exists, or shows interactive list
+- If search term provided: filters notes by partial match (case-insensitive)
+- If multiple matches: shows numbered list for interactive selection
+- Opens note in configured editor (default: VS Code)
+
+**Examples:**
+```bash
+# Open the only note in topic (or choose from list)
+note --open laravel
+
+# Search for specific note using keywords
+note --open laravel livewire
+note --open javascript basics
+
+# Open from different sections
+note --open completed docker
+note --open planned kubernetes cluster
+
+# Short form
+note -o react hooks
+```
+
+**Interactive Selection Example:**
+```bash
+$ note --open javascript
+
+🔍 Found 3 matching notes in 'javascript' (in-progress):
+
+  1) JavaScript Basics
+  2) JavaScript Advanced
+  3) JavaScript ES6 Features
+
+Enter number to open (or 'q' to quit): 2
+✅ Opening: javascript-advanced.md
+```
+
 ---
 
 ## 🧪 Examples

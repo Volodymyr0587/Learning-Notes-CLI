@@ -20,6 +20,7 @@ Usage:
   note <topic> "<title>" [options]
   note --list [section]
   note --show [section] <topic>
+  note --open [section] <topic> [search]
 
 Description:
   Create and manage learning notes in Markdown format.
@@ -44,6 +45,10 @@ Options:
   --show, -s [section] <topic>
                         Show all notes in a specific topic
                         section: in-progress (default), completed, planned
+  --open, -o [section] <topic> [search]
+                        Open a note in your editor
+                        section: in-progress (default), completed, planned
+                        search: optional partial filename or keywords
   -h, --help            Show this help message
 
 Behavior:
@@ -51,6 +56,7 @@ Behavior:
     $NOTES_ROOT/$DEFAULT_SECTION/<topic>/<slug>.md
   • Editor defaults to VS Code (code)
   • If --youtube is provided, the note title becomes a clickable link
+  • --open uses fuzzy matching if search is provided
 
 Examples:
   note laravel "Laravel for beginners" \\
@@ -66,6 +72,10 @@ Examples:
   note --show laravel
   note --show planned laravel
   note --show completed docker
+
+  note --open laravel
+  note --open laravel livewire
+  note --open completed docker basics
 
 EOF
 }
@@ -157,6 +167,85 @@ show_notes() {
 }
 
 # ------------------------------
+# OPEN NOTE IN EDITOR
+# ------------------------------
+open_note() {
+  local section="$1"
+  local topic="$2"
+  local search="${3:-}"
+  local topic_dir="$NOTES_ROOT/$section/$topic"
+  
+  if [[ ! -d "$topic_dir" ]]; then
+    echo "❌ Topic '$topic' not found in section '$section'"
+    echo "   Path: $topic_dir"
+    exit 1
+  fi
+  
+  # Find all notes
+  local notes=()
+  while IFS= read -r -d '' note_file; do
+    notes+=("$note_file")
+  done < <(find "$topic_dir" -name "*.md" -type f -print0 2>/dev/null | sort -z)
+  
+  if [[ ${#notes[@]} -eq 0 ]]; then
+    echo "❌ No notes found in '$topic' ($section)"
+    exit 1
+  fi
+  
+  # If search term provided, filter notes
+  if [[ -n "$search" ]]; then
+    local filtered=()
+    for note_file in "${notes[@]}"; do
+      local filename=$(basename "$note_file" .md)
+      # Case-insensitive matching
+      if echo "$filename" | grep -iq "$search"; then
+        filtered+=("$note_file")
+      fi
+    done
+    notes=("${filtered[@]}")
+  fi
+  
+  # Handle results
+  if [[ ${#notes[@]} -eq 0 ]]; then
+    echo "❌ No notes found matching '$search' in '$topic' ($section)"
+    exit 1
+  elif [[ ${#notes[@]} -eq 1 ]]; then
+    # Exactly one match - open it
+    local note_file="${notes[0]}"
+    echo "✅ Opening: $(basename "$note_file")"
+    "$DEFAULT_EDITOR" "$note_file"
+  else
+    # Multiple matches - let user choose
+    echo "🔍 Found ${#notes[@]} matching notes in '$topic' ($section):"
+    echo
+    
+    local i=1
+    for note_file in "${notes[@]}"; do
+      local title=$(head -n 1 "$note_file" | sed 's/^# //' | sed 's/^\[//' | sed 's/\](.*)$//')
+      printf "  %d) %s\n" "$i" "$title"
+      ((i++))
+    done
+    
+    echo
+    read -p "Enter number to open (or 'q' to quit): " choice
+    
+    if [[ "$choice" == "q" || "$choice" == "Q" ]]; then
+      echo "Cancelled."
+      exit 0
+    fi
+    
+    if [[ "$choice" =~ ^[0-9]+$ ]] && [[ "$choice" -ge 1 ]] && [[ "$choice" -le ${#notes[@]} ]]; then
+      local selected_note="${notes[$((choice-1))]}"
+      echo "✅ Opening: $(basename "$selected_note")"
+      "$DEFAULT_EDITOR" "$selected_note"
+    else
+      echo "❌ Invalid choice"
+      exit 1
+    fi
+  fi
+}
+
+# ------------------------------
 # ARGUMENTS
 # ------------------------------
 if [[ $# -eq 0 ]]; then
@@ -198,6 +287,38 @@ if [[ "$1" == "--show" || "$1" == "-s" ]]; then
   fi
   
   show_notes "$section" "$topic"
+  exit 0
+fi
+
+# Check for --open
+if [[ "$1" == "--open" || "$1" == "-o" ]]; then
+  shift  # Remove --open flag
+  
+  if [[ $# -eq 0 ]]; then
+    echo "❌ --open requires a topic name"
+    usage
+    exit 1
+  fi
+  
+  # Check if first arg is a section name
+  if [[ "$1" == "$DEFAULT_SECTION" || "$1" == "$COMPLETED_SECTION" || "$1" == "$PLANNED_SECTION" ]]; then
+    section="$1"
+    shift
+    if [[ $# -eq 0 ]]; then
+      echo "❌ --open requires a topic name after section"
+      usage
+      exit 1
+    fi
+    topic="$1"
+    search="${2:-}"
+  else
+    # No section specified, use default
+    section="$DEFAULT_SECTION"
+    topic="$1"
+    search="${2:-}"
+  fi
+  
+  open_note "$section" "$topic" "$search"
   exit 0
 fi
 
