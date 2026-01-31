@@ -87,17 +87,17 @@ Create a new learning note.
 
 ### Options
 
-| Option               | Description                          |                                                                    |
-| -------------------- | ------------------------------------ | ------------------------------------------------------------------ |
-| `--youtube <url>`    | YouTube video link                   |                                                                    |
-| `--channel <value>`  | Channel in format: `"Channel Name    | [https://youtube.com/@channel"`](https://youtube.com/@channel%22`) |
-| `--next <url>`       | Link to the next lesson/video        |                                                                    |
-| `--project <path>`   | Local project folder path            |                                                                    |
-| `--db <name>`        | Database name (e.g. sqlite, mysql)   |                                                                    |
-| `--github <url>`     | Your GitHub repository               |                                                                    |
-| `--source <value>`   | Course/source code URL or local path |                                                                    |
-| `--editor <command>` | Editor command (default: `code`)     |                                                                    |
-| `-h`, `--help`       | Show help                            |                                                                    |
+| Option               | Description                                                               |
+| -------------------- | ------------------------------------------------------------------------- |
+| `--youtube <url>`    | YouTube video link                                                        |
+| `--channel <value>`  | Channel in format: `"Channel Name\|https://www.youtube.com/@ChannelName"` |
+| `--next <url>`       | Link to the next lesson/video                                             |
+| `--project <path>`   | Local project folder path                                                 |
+| `--db <name>`        | Database name (e.g. sqlite, mysql)                                        |
+| `--github <url>`     | Your GitHub repository                                                    |
+| `--source <value>`   | Course/source code URL or local path                                      |
+| `--editor <command>` | Editor command (default: `code`)                                          |
+| `-h`, `--help`       | Show help                                                                 |
 
 
 ### `note --list [section]`
